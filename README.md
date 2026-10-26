@@ -10,7 +10,7 @@
 2. 左側「資料庫和儲存空間 → Firestore」→「建立資料庫」→ 位置選 `asia-east1（台灣）` → 選「以正式版模式啟動」。
 3. 進入 Firestore 的「規則」分頁，把本專案 `firestore.rules` 的內容整段貼上，
    把 `你的Email@gmail.com` 改成你自己的 Google 帳號（家人要用就用逗號加進去），按「發布」。
-4. 左側「安全性 → Authentication」→「開始使用」→「登入方式」→ 啟用「Google」→ 儲存。
+4. 左側「安全性 → Authentication」→「開始使用」→「登入方式」→ 啟用「Google」→ 儲存。其他登入方式（電子郵件/密碼、匿名等）不要開。
 5. Authentication →「設定」→「授權網域」→ 新增 `<你的 GitHub 帳號>.github.io`。
 
 ### 2. 取得網頁設定
@@ -25,3 +25,9 @@
 - `index.html`、`style.css`、`app.js`：網頁本體
 - `firebase-config.js`：Firebase 連線設定
 - `firestore.rules`：資料庫權限規則（只有名單內的帳號能讀寫）
+
+## 安全性
+- `firebase-config.js` 裡的 apiKey 不是密碼，公開是正常的；真正擋住別人的是 Firestore 規則。
+- 規則只放行「已驗證 Email」且在名單內的帳號，你的 Email 只寫在 Firebase 主控台，不要 commit 到這個公開儲存庫。
+- 修改 `firestore.rules` 後，記得把內容貼回主控台（並填回你的 Email）再按「發布」，主控台的版本才是實際生效的。
+- 不要把 Firestore 切成「測試模式」，那會讓任何人都能讀寫。

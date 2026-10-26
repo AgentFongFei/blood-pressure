@@ -207,24 +207,28 @@ function render() {
   const labels = rows.map((r) => r.date);
   drawCharts(labels, rows);
 
-  $("recordRows").innerHTML = rows.slice().reverse().map((r) => r.id === editingId ? `
+  $("recordRows").innerHTML = rows.slice().reverse().map((r) => {
+    // 資料來自資料庫，先跳脫再放進 HTML
+    const [id, date, sys, dia, pulse] = [r.id, r.date, r.systolic, r.diastolic, r.pulse].map(escapeHtml);
+    return r.id === editingId ? `
     <tr>
-      <td><input type="date" data-field="date" value="${r.date}"></td>
-      <td><input type="number" data-field="systolic" value="${r.systolic}" inputmode="numeric"></td>
-      <td><input type="number" data-field="diastolic" value="${r.diastolic}" inputmode="numeric"></td>
-      <td><input type="number" data-field="pulse" value="${r.pulse}" inputmode="numeric"></td>
+      <td><input type="date" data-field="date" value="${date}"></td>
+      <td><input type="number" data-field="systolic" value="${sys}" inputmode="numeric"></td>
+      <td><input type="number" data-field="diastolic" value="${dia}" inputmode="numeric"></td>
+      <td><input type="number" data-field="pulse" value="${pulse}" inputmode="numeric"></td>
       <td class="row-actions">
-        <button class="link" data-action="save" data-id="${r.id}">儲存</button>
-        <button class="link" data-action="cancel" data-id="${r.id}">取消</button>
+        <button class="link" data-action="save" data-id="${id}">儲存</button>
+        <button class="link" data-action="cancel" data-id="${id}">取消</button>
       </td>
     </tr>` : `
     <tr>
-      <td>${r.date}</td><td>${r.systolic}</td><td>${r.diastolic}</td><td>${r.pulse}</td>
+      <td>${date}</td><td>${sys}</td><td>${dia}</td><td>${pulse}</td>
       <td class="row-actions">
-        <button class="link" data-action="edit" data-id="${r.id}">編輯</button>
-        <button class="del" data-action="delete" data-id="${r.id}">刪除</button>
+        <button class="link" data-action="edit" data-id="${id}">編輯</button>
+        <button class="del" data-action="delete" data-id="${id}">刪除</button>
       </td>
-    </tr>`).join("");
+    </tr>`;
+  }).join("");
 }
 
 function drawCharts(labels, rows) {

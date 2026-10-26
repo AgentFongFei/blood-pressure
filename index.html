@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>血壓紀錄</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header class="topbar">
+    <h1>血壓紀錄</h1>
+    <div id="authArea">
+      <span id="userLabel"></span>
+      <button id="loginBtn" class="btn">使用 Google 登入</button>
+      <button id="logoutBtn" class="btn ghost" hidden>登出</button>
+    </div>
+  </header>
+
+  <main>
+    <p id="notice" class="notice" hidden></p>
+
+    <section class="card">
+      <h2>新增紀錄</h2>
+      <form id="recordForm" class="grid">
+        <label>日期
+          <input type="date" id="date" required>
+        </label>
+        <label>姓名
+          <input type="text" id="name" list="nameList" placeholder="例如：王小明" required>
+          <datalist id="nameList"></datalist>
+        </label>
+        <label>最高血壓（收縮壓）
+          <input type="number" id="systolic" min="40" max="300" inputmode="numeric" placeholder="mmHg" required>
+        </label>
+        <label>最低血壓（舒張壓）
+          <input type="number" id="diastolic" min="20" max="200" inputmode="numeric" placeholder="mmHg" required>
+        </label>
+        <label>心率
+          <input type="number" id="pulse" min="20" max="250" inputmode="numeric" placeholder="次/分" required>
+        </label>
+        <div class="actions">
+          <button type="submit" class="btn primary" id="saveBtn">儲存</button>
+          <span id="saveMsg" class="msg"></span>
+        </div>
+      </form>
+    </section>
+
+    <section class="card">
+      <div class="card-head">
+        <h2>分析</h2>
+        <label class="inline">姓名
+          <select id="nameFilter"></select>
+        </label>
+      </div>
+      <h3>血壓</h3>
+      <div class="chart-box"><canvas id="bpChart"></canvas></div>
+      <h3>心率</h3>
+      <div class="chart-box"><canvas id="pulseChart"></canvas></div>
+      <p id="emptyMsg" class="msg" hidden>目前沒有這個人的紀錄。</p>
+
+      <details class="records">
+        <summary>查看紀錄明細</summary>
+        <table>
+          <thead><tr><th>日期</th><th>最高</th><th>最低</th><th>心率</th><th></th></tr></thead>
+          <tbody id="recordRows"></tbody>
+        </table>
+      </details>
+    </section>
+  </main>
+
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.js"></script>
+  <script type="module" src="app.js"></script>
+</body>
+</html>

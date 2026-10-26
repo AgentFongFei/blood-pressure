@@ -1,0 +1,20 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // 只有名單內的 Google 帳號可以讀寫血壓紀錄。要讓家人也能用，就把他們的 Email 加進清單。
+    function allowed() {
+      return request.auth != null
+        && request.auth.token.email in ['你的Email@gmail.com'];
+    }
+
+    match /bp_records/{id} {
+      allow read, delete: if allowed();
+      allow create: if allowed()
+        && request.resource.data.name is string
+        && request.resource.data.date is string
+        && request.resource.data.systolic is number
+        && request.resource.data.diastolic is number
+        && request.resource.data.pulse is number;
+    }
+  }
+}

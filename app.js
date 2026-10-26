@@ -3,7 +3,7 @@ import {
   getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 import {
-  getFirestore, collection, addDoc, deleteDoc, doc, onSnapshot, serverTimestamp
+  getFirestore, collection, addDoc, updateDoc, deleteDoc, doc, onSnapshot, serverTimestamp
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 import { firebaseConfig } from "./firebase-config.js";
 
@@ -14,18 +14,28 @@ let records = [];
 let unsubscribe = null;
 let bpChart = null;
 let pulseChart = null;
+let editingId = null;
 
 function showNotice(text) {
   $("notice").textContent = text;
   $("notice").hidden = !text;
 }
 
-function todayString() {
-  const d = new Date();
+function dateString(d) {
   const pad = (n) => String(n).padStart(2, "0");
   return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
 }
+function todayString() {
+  return dateString(new Date());
+}
 $("date").value = todayString();
+
+document.querySelectorAll(".tab").forEach((tab) => {
+  tab.addEventListener("click", () => {
+    document.querySelectorAll(".tab").forEach((t) => t.classList.toggle("active", t === tab));
+    document.querySelectorAll(".tab-panel").forEach((p) => { p.hidden = p.id !== tab.dataset.tab; });
+  });
+});
 
 if (!firebaseConfig.apiKey || !firebaseConfig.projectId) {
   showNotice("尚未設定資料庫：請把 Firebase 設定貼到 firebase-config.js（步驟見 README）。");
@@ -107,15 +117,73 @@ $("recordForm").addEventListener("submit", async (e) => {
 });
 
 $("nameFilter").addEventListener("change", render);
+$("rangeFilter").addEventListener("change", () => {
+  const custom = $("rangeFilter").value === "custom";
+  $("customRange").hidden = !custom;
+  if (custom && !$("rangeStart").value) {
+    const start = new Date();
+    start.setDate(start.getDate() - 29);
+    $("rangeStart").value = dateString(start);
+    $("rangeEnd").value = todayString();
+  }
+  render();
+});
+$("rangeStart").addEventListener("change", render);
+$("rangeEnd").addEventListener("change", render);
+
+// 回傳 [開始, 結束] 日期字串，空字串代表不限制
+function currentRange() {
+  const v = $("rangeFilter").value;
+  if (v === "all") return ["", ""];
+  if (v === "custom") return [$("rangeStart").value, $("rangeEnd").value];
+  const start = new Date();
+  start.setDate(start.getDate() - (Number(v) - 1));
+  return [dateString(start), ""];
+}
 
 $("recordRows").addEventListener("click", async (e) => {
-  const id = e.target.dataset.id;
-  if (!id) return;
-  if (!confirm("確定要刪除這筆紀錄嗎？")) return;
-  try {
-    await deleteDoc(doc(db, COLLECTION, id));
-  } catch (err) {
-    alert("刪除失敗：" + err.message);
+  const btn = e.target.closest("button");
+  if (!btn) return;
+  const id = btn.dataset.id;
+  const action = btn.dataset.action;
+
+  if (action === "edit") {
+    editingId = id;
+    render();
+  } else if (action === "cancel") {
+    editingId = null;
+    render();
+  } else if (action === "save") {
+    const row = btn.closest("tr");
+    const val = (field) => row.querySelector(`[data-field="${field}"]`).value;
+    const changes = {
+      date: val("date"),
+      systolic: Number(val("systolic")),
+      diastolic: Number(val("diastolic")),
+      pulse: Number(val("pulse")),
+    };
+    if (!changes.date || !changes.systolic || !changes.diastolic || !changes.pulse) {
+      alert("請填完所有欄位。");
+      return;
+    }
+    btn.disabled = true;
+    try {
+      await updateDoc(doc(db, COLLECTION, id), changes);
+      editingId = null;
+      render();
+    } catch (err) {
+      btn.disabled = false;
+      alert(err.code === "permission-denied"
+        ? "沒有編輯權限，請到 Firebase 更新 Firestore 規則（允許 update）。"
+        : "更新失敗：" + err.message);
+    }
+  } else if (action === "delete") {
+    if (!confirm("確定要刪除這筆紀錄嗎？")) return;
+    try {
+      await deleteDoc(doc(db, COLLECTION, id));
+    } catch (err) {
+      alert("刪除失敗：" + err.message);
+    }
   }
 });
 
@@ -131,16 +199,31 @@ function render() {
     : `<option value="">（尚無資料）</option>`;
   filter.value = names.includes(current) ? current : (names[0] || "");
 
-  const rows = records.filter((r) => r.name === filter.value);
+  const [start, end] = currentRange();
+  const rows = records.filter((r) =>
+    r.name === filter.value && (!start || r.date >= start) && (!end || r.date <= end));
   $("emptyMsg").hidden = rows.length > 0 || !names.length;
 
   const labels = rows.map((r) => r.date);
   drawCharts(labels, rows);
 
-  $("recordRows").innerHTML = rows.slice().reverse().map((r) => `
+  $("recordRows").innerHTML = rows.slice().reverse().map((r) => r.id === editingId ? `
+    <tr>
+      <td><input type="date" data-field="date" value="${r.date}"></td>
+      <td><input type="number" data-field="systolic" value="${r.systolic}" inputmode="numeric"></td>
+      <td><input type="number" data-field="diastolic" value="${r.diastolic}" inputmode="numeric"></td>
+      <td><input type="number" data-field="pulse" value="${r.pulse}" inputmode="numeric"></td>
+      <td class="row-actions">
+        <button class="link" data-action="save" data-id="${r.id}">儲存</button>
+        <button class="link" data-action="cancel" data-id="${r.id}">取消</button>
+      </td>
+    </tr>` : `
     <tr>
       <td>${r.date}</td><td>${r.systolic}</td><td>${r.diastolic}</td><td>${r.pulse}</td>
-      <td><button class="del" data-id="${r.id}">刪除</button></td>
+      <td class="row-actions">
+        <button class="link" data-action="edit" data-id="${r.id}">編輯</button>
+        <button class="del" data-action="delete" data-id="${r.id}">刪除</button>
+      </td>
     </tr>`).join("");
 }
 

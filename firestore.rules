@@ -7,14 +7,17 @@ service cloud.firestore {
         && request.auth.token.email in ['你的Email@gmail.com'];
     }
 
-    match /bp_records/{id} {
-      allow read, delete: if allowed();
-      allow create: if allowed()
-        && request.resource.data.name is string
+    function validRecord() {
+      return request.resource.data.name is string
         && request.resource.data.date is string
         && request.resource.data.systolic is number
         && request.resource.data.diastolic is number
         && request.resource.data.pulse is number;
+    }
+
+    match /bp_records/{id} {
+      allow read, delete: if allowed();
+      allow create, update: if allowed() && validRecord();
     }
   }
 }

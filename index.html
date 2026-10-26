@@ -47,24 +47,48 @@
 
     <section class="card">
       <div class="card-head">
-        <h2>分析</h2>
-        <label class="inline">姓名
-          <select id="nameFilter"></select>
-        </label>
+        <div class="tabs" role="tablist">
+          <button type="button" class="tab active" data-tab="chartTab" role="tab">折線圖</button>
+          <button type="button" class="tab" data-tab="tableTab" role="tab">紀錄表格</button>
+        </div>
+        <div class="filters">
+          <label class="inline">姓名
+            <select id="nameFilter"></select>
+          </label>
+          <label class="inline">期間
+            <select id="rangeFilter">
+              <option value="7">最近 7 天</option>
+              <option value="30" selected>最近 30 天</option>
+              <option value="90">最近 3 個月</option>
+              <option value="365">最近 1 年</option>
+              <option value="all">全部</option>
+              <option value="custom">自訂…</option>
+            </select>
+          </label>
+          <span id="customRange" class="inline" hidden>
+            <input type="date" id="rangeStart" aria-label="開始日期">
+            <span>～</span>
+            <input type="date" id="rangeEnd" aria-label="結束日期">
+          </span>
+        </div>
       </div>
-      <h3>血壓</h3>
-      <div class="chart-box"><canvas id="bpChart"></canvas></div>
-      <h3>心率</h3>
-      <div class="chart-box"><canvas id="pulseChart"></canvas></div>
-      <p id="emptyMsg" class="msg" hidden>目前沒有這個人的紀錄。</p>
+      <p id="emptyMsg" class="msg" hidden>這段期間沒有這個人的紀錄。</p>
 
-      <details class="records">
-        <summary>查看紀錄明細</summary>
-        <table>
-          <thead><tr><th>日期</th><th>最高</th><th>最低</th><th>心率</th><th></th></tr></thead>
-          <tbody id="recordRows"></tbody>
-        </table>
-      </details>
+      <div id="chartTab" class="tab-panel">
+        <h3>血壓</h3>
+        <div class="chart-box"><canvas id="bpChart"></canvas></div>
+        <h3>心率</h3>
+        <div class="chart-box"><canvas id="pulseChart"></canvas></div>
+      </div>
+
+      <div id="tableTab" class="tab-panel" hidden>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>日期</th><th>最高血壓</th><th>最低血壓</th><th>心率</th><th></th></tr></thead>
+            <tbody id="recordRows"></tbody>
+          </table>
+        </div>
+      </div>
     </section>
   </main>
 

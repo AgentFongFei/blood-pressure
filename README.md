@@ -7,10 +7,10 @@
 
 ### 1. 建立 Firebase 專案
 1. 到 <https://console.firebase.google.com/> 用 Google 帳號登入，按「建立專案」，名稱隨意（例如 `bp-record`），Google Analytics 可以關掉。
-2. 左側「建構 → Firestore Database」→「建立資料庫」→ 位置選 `asia-east1（台灣）` → 選「以正式版模式啟動」。
+2. 左側「資料庫和儲存空間 → Firestore」→「建立資料庫」→ 位置選 `asia-east1（台灣）` → 選「以正式版模式啟動」。
 3. 進入 Firestore 的「規則」分頁，把本專案 `firestore.rules` 的內容整段貼上，
    把 `你的Email@gmail.com` 改成你自己的 Google 帳號（家人要用就用逗號加進去），按「發布」。
-4. 左側「建構 → Authentication」→「開始使用」→「登入方式」→ 啟用「Google」→ 儲存。
+4. 左側「安全性 → Authentication」→「開始使用」→「登入方式」→ 啟用「Google」→ 儲存。
 5. Authentication →「設定」→「授權網域」→ 新增 `<你的 GitHub 帳號>.github.io`。
 
 ### 2. 取得網頁設定
